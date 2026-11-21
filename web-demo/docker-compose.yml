@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vietfood-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vietfood_admin
+      POSTGRES_PASSWORD: vietfood_password
+      POSTGRES_DB: vietfood_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - vietfood_pgdata:/var/lib/postgresql/data
+
+volumes:
+  vietfood_pgdata:

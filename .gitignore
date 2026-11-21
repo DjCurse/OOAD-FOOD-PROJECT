@@ -1,0 +1,8 @@
+﻿
+# Bo qua thu vien & file moi truong
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+.env
+**/.env

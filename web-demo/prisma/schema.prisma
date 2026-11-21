@@ -1,0 +1,102 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model VaiTro {
+  maVaiTro  Int         @id @default(autoincrement())
+  tenVaiTro String      @unique // Admin, Thu Ngân, Bếp, Phục Vụ, Khách Hàng
+  nguoiDung NguoiDung[]
+}
+
+model NguoiDung {
+  maNguoiDung Int       @id @default(autoincrement())
+  hoTen       String
+  email       String    @unique
+  matKhau     String
+  trangThai   Boolean   @default(true)
+  maVaiTro    Int
+  vaiTro      VaiTro    @relation(fields: [maVaiTro], references: [maVaiTro])
+  donHang     DonHang[]
+}
+
+model DanhMuc {
+  maDanhMuc  Int     @id @default(autoincrement())
+  tenDanhMuc String  @unique
+  monAn      MonAn[]
+}
+
+model MonAn {
+  maMonAn   Int              @id @default(autoincrement())
+  tenMon    String
+  hinhAnh   String?
+  moTa      String?
+  giaBan    Int
+  trangThai String           @default("Còn hàng") // Còn hàng | Tạm hết | Ngừng kinh doanh
+  maDanhMuc Int
+  danhMuc   DanhMuc          @relation(fields: [maDanhMuc], references: [maDanhMuc])
+  congThuc  CongThucMonAn[]
+  chiTiet   ChiTietDonHang[]
+}
+
+model NguyenLieu {
+  maNguyenLieu  Int             @id @default(autoincrement())
+  tenNguyenLieu String          @unique
+  donViTinh     String          // kg, gram, lít, quả, ổ...
+  soLuongTonKho Float           @default(0)
+  congThuc      CongThucMonAn[]
+}
+
+model CongThucMonAn {
+  maMonAn         Int
+  maNguyenLieu    Int
+  soLuongCanTru   Float
+  monAn           MonAn      @relation(fields: [maMonAn], references: [maMonAn], onDelete: Cascade)
+  nguyenLieu      NguyenLieu @relation(fields: [maNguyenLieu], references: [maNguyenLieu], onDelete: Cascade)
+
+  @@id([maMonAn, maNguyenLieu])
+}
+
+model KhuyenMai {
+  maKhuyenMai     String    @id // VD: VIETFOOD10, GIAM20K
+  moTa            String
+  loaiGiam        String    // PHAN_TRAM | TIEN_MAT
+  giaTriGiam      Int
+  donToiThieu     Int       @default(0)
+  dangHoatDong    Boolean   @default(true)
+  donHang         DonHang[]
+}
+
+model DonHang {
+  maDonHang       String           @id // VD: ORD-1732150000
+  soBan           String?
+  ngayDat         DateTime         @default(now())
+  tongTien        Int
+  tienGiam        Int              @default(0)
+  hinhThuc        String           // Tại chỗ | Mang đi
+  trangThai       String           @default("Chờ xử lý") // Chờ xử lý | Đang chế biến | Đã hoàn thành | Đã thanh toán | Đã hủy
+  nhanCapNhat     String?          // ĐÃ SỬA | MỚI THÊM
+  ghiChu          String?
+  maNguoiDung     Int?
+  nguoiDung       NguoiDung?       @relation(fields: [maNguoiDung], references: [maNguoiDung])
+  maKhuyenMai     String?
+  khuyenMai       KhuyenMai?       @relation(fields: [maKhuyenMai], references: [maKhuyenMai])
+  chiTiet         ChiTietDonHang[]
+}
+
+model ChiTietDonHang {
+  id           Int     @id @default(autoincrement())
+  maDonHang    String
+  maMonAn      Int
+  soLuong      Int
+  donGia       Int
+  trangThaiMon String  @default("Chờ") // Chờ | Đang chế biến | Hoàn thành | Hủy
+  ghiChu       String?
+  donHang      DonHang @relation(fields: [maDonHang], references: [maDonHang], onDelete: Cascade)
+  monAn        MonAn   @relation(fields: [maMonAn], references: [maMonAn])
+}

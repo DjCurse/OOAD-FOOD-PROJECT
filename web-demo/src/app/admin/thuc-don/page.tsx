@@ -409,6 +409,7 @@ export default function GiaoDienThucDon() {
                 <thead>
                   <tr className="border-b border-gray-200 text-xs uppercase text-gray-500">
                     <th className="py-3 px-2">Mã</th>
+                    <th className="py-3 px-2">Hình ảnh</th>
                     <th className="py-3 px-2">Tên món</th>
                     <th className="py-3 px-2">Danh mục</th>
                     <th className="py-3 px-2">Giá bán</th>
@@ -424,6 +425,18 @@ export default function GiaoDienThucDon() {
                       <tr key={mon.maMonAn} className="hover:bg-gray-50">
                         <td className="py-3 px-2 font-mono text-xs text-gray-500">
                           #{mon.maMonAn}
+                        </td>
+                        <td className="py-3 px-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={mon.hinhAnh}
+                            alt={mon.tenMon}
+                            className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src =
+                                '/images/default-food.jpg';
+                            }}
+                          />
                         </td>
                         <td className="py-3 px-2">
                           <p className="font-bold text-gray-900">{mon.tenMon}</p>

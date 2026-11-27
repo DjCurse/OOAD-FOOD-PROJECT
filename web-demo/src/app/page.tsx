@@ -57,6 +57,9 @@ export default function GiaoDienDatMon() {
   const [maDanhMucChon, setMaDanhMucChon] = useState<number | ''>('');
   const [locBanChay, setLocBanChay] = useState(false);
   const [sapXepGia, setSapXepGia] = useState<'' | 'asc' | 'desc'>('');
+  // UC-4.1: lọc theo khoảng giá
+  const [giaMin, setGiaMin] = useState('');
+  const [giaMax, setGiaMax] = useState('');
 
   const [monDangChon, setMonDangChon] = useState<MonAnItem | null>(null);
   const [hinhThucMon, setHinhThucMon] = useState<'' | 'Tại chỗ' | 'Mang đi'>('');
@@ -80,6 +83,8 @@ export default function GiaoDienDatMon() {
     if (maDanhMucChon !== '') query.set('maDanhMuc', String(maDanhMucChon));
     if (locBanChay) query.set('locBanChay', 'true');
     if (sapXepGia) query.set('sapXepGia', sapXepGia);
+    if (giaMin.trim()) query.set('giaMin', giaMin.trim());
+    if (giaMax.trim()) query.set('giaMax', giaMax.trim());
 
     const res = await fetch(`/api/dat-mon?${query.toString()}`);
     const data = await res.json();
@@ -88,7 +93,7 @@ export default function GiaoDienDatMon() {
     setDonHangs(data.donHangs || []);
     setThongBaoTimKiem(data.thongBao || '');
     setLoading(false);
-  }, [tuKhoa, maDanhMucChon, locBanChay, sapXepGia]);
+  }, [tuKhoa, maDanhMucChon, locBanChay, sapXepGia, giaMin, giaMax]);
 
   useEffect(() => {
     taiThucDon();
@@ -229,7 +234,7 @@ export default function GiaoDienDatMon() {
               </button>
             ))}
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setLocBanChay(!locBanChay)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
@@ -249,6 +254,26 @@ export default function GiaoDienDatMon() {
                 <option value="asc">Giá: Thấp &rarr; Cao</option>
                 <option value="desc">Giá: Cao &rarr; Thấp</option>
               </select>
+              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="font-semibold">Giá:</span>
+                <input
+                  type="number"
+                  value={giaMin}
+                  onChange={(e) => setGiaMin(e.target.value)}
+                  placeholder="Từ"
+                  min={0}
+                  className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700"
+                />
+                <span>&ndash;</span>
+                <input
+                  type="number"
+                  value={giaMax}
+                  onChange={(e) => setGiaMax(e.target.value)}
+                  placeholder="Đến"
+                  min={0}
+                  className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -276,19 +301,33 @@ export default function GiaoDienDatMon() {
                   }`}
                 >
                   <div>
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-red-50 text-red-700">
-                        {mon.tenDanhMuc}
-                      </span>
-                      {hetHang ? (
-                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-gray-700 text-white">
-                          Hết hàng
+                    <div className="relative -mx-4 -mt-4 mb-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={mon.hinhAnh}
+                        alt={mon.tenMon}
+                        className="w-full h-32 object-cover rounded-t-2xl"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src =
+                            '/images/default-food.jpg';
+                        }}
+                      />
+                      <div className="absolute top-2 left-2">
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-white/95 text-red-700 shadow-sm">
+                          {mon.tenDanhMuc}
                         </span>
-                      ) : (
-                        <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
-                          Còn hàng
-                        </span>
-                      )}
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        {hetHang ? (
+                          <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-gray-700 text-white">
+                            Hết hàng
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
+                            Còn hàng
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <h3 className="font-bold text-gray-900 text-base">{mon.tenMon}</h3>
@@ -486,6 +525,16 @@ export default function GiaoDienDatMon() {
       {monDangChon && (
         <div className="fixed inset-0 bg-black/45 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={monDangChon.hinhAnh}
+              alt={monDangChon.tenMon}
+              className="w-full h-40 object-cover rounded-xl mb-4"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src =
+                  '/images/default-food.jpg';
+              }}
+            />
             <h3 className="text-lg font-bold text-gray-900">{monDangChon.tenMon}</h3>
             <p className="text-xs text-gray-500 mt-1">{monDangChon.moTa}</p>
             <p className="text-base font-extrabold text-red-600 mt-2">

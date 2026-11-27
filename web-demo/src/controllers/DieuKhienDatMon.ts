@@ -15,6 +15,8 @@ export class DieuKhienDatMon {
     maDanhMuc?: number;
     locBanChay?: boolean;
     sapXepGia?: 'asc' | 'desc';
+    giaMin?: number;
+    giaMax?: number;
   }) {
     const danhMucs = await this.danhMucDAO.layTatCa();
     const monAns = await this.monAnDAO.layDanhSach({
@@ -23,6 +25,8 @@ export class DieuKhienDatMon {
       chiHienThiDangKinhDoanh: true,
       locBanChay: params?.locBanChay,
       sapXepGia: params?.sapXepGia,
+      giaMin: params?.giaMin,
+      giaMax: params?.giaMax,
     });
     const donHangs = await this.donHangDAO.layDanhSachDonGanDay();
 

@@ -15,12 +15,19 @@ export async function GET(req: NextRequest) {
       sapXepGiaParam === 'asc' || sapXepGiaParam === 'desc'
         ? sapXepGiaParam
         : undefined;
+    // UC-4.1: lọc theo khoảng giá (giaMin / giaMax)
+    const giaMinParam = searchParams.get('giaMin');
+    const giaMaxParam = searchParams.get('giaMax');
+    const giaMin = giaMinParam ? Number(giaMinParam) : undefined;
+    const giaMax = giaMaxParam ? Number(giaMaxParam) : undefined;
 
     const data = await dieuKhienDatMon.xemVaTimKiemThucDon({
       tuKhoa,
       maDanhMuc,
       locBanChay,
       sapXepGia,
+      giaMin: Number.isFinite(giaMin) ? giaMin : undefined,
+      giaMax: Number.isFinite(giaMax) ? giaMax : undefined,
     });
 
     return NextResponse.json(data);

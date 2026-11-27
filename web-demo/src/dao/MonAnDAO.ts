@@ -8,6 +8,8 @@ export class MonAnDAO {
     chiHienThiDangKinhDoanh?: boolean;
     locBanChay?: boolean;
     sapXepGia?: 'asc' | 'desc';
+    giaMin?: number;
+    giaMax?: number;
   }): Promise<MonAn[]> {
     const rows = await prisma.monAn.findMany({
       where: {
@@ -18,6 +20,15 @@ export class MonAnDAO {
         ...(boLoc?.tuKhoa
           ? { tenMon: { contains: boLoc.tuKhoa.trim(), mode: 'insensitive' } }
           : {}),
+        // UC-4.1: lọc theo khoảng giá (giaBan là kiểu Decimal nên gộp chung một điều kiện)
+        ...(boLoc?.giaMin !== undefined || boLoc?.giaMax !== undefined
+          ? {
+              giaBan: {
+                ...(boLoc.giaMin !== undefined ? { gte: boLoc.giaMin } : {}),
+                ...(boLoc.giaMax !== undefined ? { lte: boLoc.giaMax } : {}),
+              },
+            }
+          : {}),
       },
       include: {
         danhMuc: true,
@@ -27,8 +38,18 @@ export class MonAnDAO {
         : { maMonAn: 'asc' },
     });
 
+    // Lượt bán chỉ tính từ các đơn hàng đã hoàn thành (không tính đơn "Đã hủy")
+    const donHoanThanh = await prisma.donHang.findMany({
+      where: { trangThai: 'Đã hoàn thành' },
+      select: { maDonHang: true },
+    });
+    const maDonHoanThanh = donHoanThanh.map((d) => d.maDonHang);
+
     const thongKeBan = await prisma.chiTietDonHang.groupBy({
       by: ['maMonAn'],
+      where: maDonHoanThanh.length
+        ? { maDonHang: { in: maDonHoanThanh } }
+        : { maDonHang: -1 },
       _sum: { soLuong: true },
     });
     const luotBanMap = new Map<number, number>(
@@ -51,7 +72,10 @@ export class MonAnDAO {
     });
 
     if (boLoc?.locBanChay) {
-      return mapped.sort((a, b) => (b.tongLuotBan || 0) - (a.tongLuotBan || 0));
+      // UC-4.1: lọc món bán chạy (chỉ giữ món đã bán ít nhất 1 lần) và sắp xếp giảm dần lượt bán
+      return mapped
+        .filter((a) => (a.tongLuotBan || 0) > 0)
+        .sort((a, b) => (b.tongLuotBan || 0) - (a.tongLuotBan || 0));
     }
 
     return mapped;

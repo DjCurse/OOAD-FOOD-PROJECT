@@ -55,8 +55,8 @@ export default function GiaoDienBepVaHoaDon() {
     chiTiet: ChiTietMon[];
   } | null>(null);
 
-  const taiDuLieu = useCallback(async () => {
-    setLoading(true);
+  const taiDuLieu = useCallback(async (hienLoading = true) => {
+    if (hienLoading) setLoading(true);
     const res = await fetch('/api/bep-hoa-don');
     if (res.ok) {
       const data = await res.json();
@@ -68,6 +68,12 @@ export default function GiaoDienBepVaHoaDon() {
 
   useEffect(() => {
     taiDuLieu();
+    // UC-05.1: hệ thống đẩy order mới xuống Màn hình Bếp theo thời gian thực,
+    // không cần tải lại trang -> polling định kỳ mỗi 5 giây.
+    const timer = setInterval(() => {
+      taiDuLieu(false);
+    }, 5000);
+    return () => clearInterval(timer);
   }, [taiDuLieu]);
 
   const doiTrangThaiMon = async (
@@ -187,7 +193,7 @@ export default function GiaoDienBepVaHoaDon() {
         </div>
 
         <button
-          onClick={taiDuLieu}
+          onClick={() => taiDuLieu()}
           className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50"
         >
           ↻ Làm mới danh sách
